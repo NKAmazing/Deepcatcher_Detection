@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 # Model paths
-model_paths = ['detection_model/model.h5', 'detection_model/models/model_1.h5', 'detection_model/models/model_2.h5']
+model_paths = ['../detection_model/models/model_0.h5', '../detection_model/models/model_1.h5', '../detection_model/models/model_2.h5', '../detection_model/models/model_3.h5']
 
 # Load the model
 model = tf.keras.models.load_model(model_paths[2])
