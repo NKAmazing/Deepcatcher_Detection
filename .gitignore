@@ -162,3 +162,9 @@ cython_debug/
 # Dataset and model checkpoints
 data/
 .vscode/
+etc
+Include
+Scripts
+share
+Lib
+pyvenv.cfg
