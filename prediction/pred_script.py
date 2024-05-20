@@ -23,7 +23,7 @@ def preprocess_image(image, target_size):
         return None
 
 # Function to perform prediction
-def predict(image_data, model, threshold=0.5):
+def predict(image_data, model):
     try:
         classes = ['Fake', 'Real']
         prediction = model.predict(image_data)
@@ -41,20 +41,23 @@ def predict(image_data, model, threshold=0.5):
 # Main Streamlit app
 def main():
     st.title('Image Classification: Real vs. Fake')
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    uploaded_files = st.file_uploader("Choose images...", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-    if uploaded_file is not None:
-        # Preprocess the uploaded image
-        image = preprocess_image(uploaded_file, target_size=(150, 150))
+    if uploaded_files:
+        num_images = len(uploaded_files)
+        cols = st.columns(num_images)  # Create columns for each image
 
-        if image is not None:
-            # Perform prediction
-            predicted_class, confidence = predict(image, model)
+        for i, uploaded_file in enumerate(uploaded_files):
+            # Preprocess the uploaded image
+            image = preprocess_image(uploaded_file, target_size=(96, 96))
 
-            if predicted_class is not None:
-                # Display prediction result
-                st.image(uploaded_file, caption='Uploaded Image.', use_column_width=True)
-                st.write(f'This image has a probability of being {predicted_class} with a confidence of {confidence:.2f}%')
+            if image is not None:
+                # Perform prediction
+                predicted_class, confidence = predict(image, model)
+
+                if predicted_class is not None:
+                    # Display prediction result
+                    cols[i].image(uploaded_file, caption=f'Uploaded Image ({predicted_class}, {confidence:.2f}%)', use_column_width=True)
 
 if __name__ == '__main__':
     main()
