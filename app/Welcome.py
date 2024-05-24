@@ -12,6 +12,20 @@ st.sidebar.title("Menú")
 
 menu = st.sidebar.radio("Selecciona una opción", ["Inicio", "Registro", "Login"])
 
+if 'token' not in st.session_state:
+    st.session_state.token = None
+
+def get_user_id(token):
+    url_api = "http://127.0.0.1:8000/user-service/user/id/"
+    headers = {'Authorization': f'Token {token}'}
+    response = requests.get(url_api, headers=headers)
+    if response.status_code == 200:
+        return response.json().get('user_id')
+    else:
+        st.error("Error al obtener el ID del usuario")
+        return None
+
+
 if menu == "Inicio":
     st.write("Aquí va el contenido de la página de inicio")
     # Configurar el menú de navegación
@@ -34,6 +48,13 @@ if menu == "Inicio":
     if st.session_state.page == "inicio":
         st.title("Página de Inicio")
         st.write("Bienvenido a la página de inicio.")
+        st.write(st.session_state.token)
+        
+        # Get the user_id through a button
+        if st.button("Obtener ID de Usuario"):
+            user_id = get_user_id(st.session_state.token)
+            st.write(f"ID de Usuario: {user_id}")
+
     elif st.session_state.page == "historial":
         st.title("Historial de Uso")
         st.write("Aquí se mostrará el historial de uso de la aplicación.")
@@ -48,16 +69,20 @@ elif menu == "Registro":
         if not username or not email or not password:
             st.error("Todos los campos son obligatorios")
         else:
-            response = requests.post("http://localhost:8000/api/register/", data={
+            response = requests.post("http://127.0.0.1:8000/user-service/users/", data={
                 'username': username,
-                'email': email,
-                'password': password
+                'password': password,
+                'email': email   
             })
             
             if response.status_code == 201:
                 st.success("Usuario registrado con éxito")
             else:
-                st.error(response.json().get('error'))
+                try:
+                    error_message = response.json().get('error')
+                except ValueError:  # incluye JSONDecodeError
+                    error_message = "Error inesperado: respuesta no válida del servidor"
+                st.error(error_message)
 else:
     st.title("Formulario de Login")
 
@@ -76,4 +101,8 @@ else:
             if response.status_code == 200:
                 st.success("Inicio de sesión exitoso")
             else:
-                st.error(response.json().get('error'))
+                try:
+                    error_message = response.json().get('error')
+                except ValueError:  # incluye JSONDecodeError
+                    error_message = "Error inesperado: respuesta no válida del servidor"
+                st.error(error_message)

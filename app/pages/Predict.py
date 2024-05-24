@@ -2,6 +2,7 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import requests
 
 # Model paths
 model_paths = ['../detection_model/models/model_0.h5', '../detection_model/models/model_1.h5', '../detection_model/models/model_2.h5', '../detection_model/models/model_3.h5']
@@ -37,6 +38,31 @@ def predict(image_data, model):
     except Exception as e:
         st.error(f"Prediction Error: {str(e)}")
         return None, None
+    
+def get_user_id(token):
+    url_api = "http://127.0.0.1:8000/user/id/"
+    headers = {'Authorization': f'Token {token}'}
+    response = requests.get(url_api, headers=headers)
+    if response.status_code == 200:
+        return response.json().get('user_id')
+    else:
+        st.error("Error al obtener el ID del usuario")
+        return None
+
+def save_prediction(user_id, predicted_class, confidence, token):
+    # Save the prediction using the Django API
+    url_api = "http://127.0.0.1:8000/predictions/"
+    headers = {'Authorization': f'Token {token}'}
+    data = {
+        'predicted_class': predicted_class,
+        'confidence': confidence,
+        'user': user_id,
+    }
+    response = requests.post(url_api, headers=headers, json=data)
+    if response.status_code == 201:
+        st.success("Resultado de predicción guardado correctamente en la API.")
+    else:
+        st.error(f"Error al guardar resultado de predicción: {response.status_code}")
 
 # Main Streamlit app
 def main():
@@ -58,6 +84,18 @@ def main():
                 if predicted_class is not None:
                     # Display prediction result
                     cols[i].image(uploaded_file, caption=f'Uploaded Image ({predicted_class}, {confidence:.2f}%)', use_column_width=True)
+
+                    # Check if the user is authenticated
+                    if 'authenticated' in st.session_state and st.session_state.authenticated:
+                        # Get user ID and token
+                        user_id = get_user_id()
+
+                        print("User ID:", user_id)
+
+                        print("Token:", st.session_state.token)
+
+                        # Save the prediction
+                        save_prediction(user_id, predicted_class, confidence, st.session_state.token)
 
 if __name__ == '__main__':
     main()
