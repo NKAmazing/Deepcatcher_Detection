@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import requests
-from pages.Authenticate import show_login, show_authenticated_content
+# from pages.Authenticate import show_login, show_authenticated_content
 
 st.set_page_config(page_title="Deepcatcher Demo", page_icon=":globe_with_meridians:")
 
@@ -13,12 +13,12 @@ st.sidebar.title("Deepcatcher Demo")
 
 options = st.sidebar.radio("Select an option: ", ["Home", "Prediction", "Register", "Login"])
 
-# Initialize the session state
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
+# # Initialize the session state
+# if 'authenticated' not in st.session_state:
+#     st.session_state.authenticated = False
 
-if 'token' not in st.session_state:
-    st.session_state.token = None
+# if 'token' not in st.session_state:
+#     st.session_state.token = None
 
 # if 'token' not in st.session_state:
 #     st.session_state.token = None

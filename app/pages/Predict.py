@@ -76,13 +76,53 @@ def get_prediction_history(token):
     else:
         st.error(f"Error at getting predictions history: {response.status_code} - {response.json()}")
         return []
+    
+def delete_prediction(prediction_id, token):
+    url_api = f"http://127.0.0.1:8000/user-service/predictions/{prediction_id}/"
+    headers = {'Authorization': f'Token {token}'}
+    print("URL: ", url_api)  # Debugging print statement
+    response = requests.delete(url_api, headers=headers)
+    if response.status_code == 204:
+        st.success("Prediction successfully deleted.")
+    else:
+        st.error(f"Error deleting the prediction: {response.status_code} - {response.json()}")
 
-def display_prediction_history(predictions):
+def handle_details_click(prediction):
+    with mui.Dialog(open=True, onClose=lambda _: None):
+        mui.DialogTitle("Prediction Details")
+        mui.DialogContent()(
+            mui.DialogContentText(f"Predicted Class: {prediction['predicted_class']}"),
+            mui.DialogContentText(f"Confidence: {prediction['confidence']:.2f}%"),
+            mui.DialogContentText(f"Date and Time: {prediction['timestamp']}")
+        )
+        mui.DialogActions()(
+            mui.Button("Close", onClick=lambda _: None)
+        )
+
+# Function to create a delete callback
+def create_delete_callback(prediction_id, token):
+    ''' Define the callback function to set the prediction ID and 
+    token and calls the delete_prediction function
+    '''
+    def callback():
+        delete_prediction(prediction_id, token)
+    return callback
+
+def display_prediction_history(predictions, token):
+    '''
+    Display the prediction history in a card format 
+    using Mui components of Streamlit-Elements
+    '''
     if predictions:
         st.subheader('Predictions History')
         with elements("history"):
             for prediction in predictions:
-                with mui.Card(sx={"maxWidth": 700, "margin": "20px auto", "border-radius": 10}):
+                prediction_id = prediction['id']  # Ensure the ID is captured correctly
+
+                # Determine the color of the typography based on the predicted class
+                color = "green" if prediction['predicted_class'] == 'Real' else "red"
+
+                with mui.Card(sx={"maxWidth": 700, "margin": "20px auto", "border-radius": 10, "border": f"2px solid {color}", "boxShadow": "0 0 10px rgba(0, 0, 0, 0.1)"}, variant="outlined"):
                     with mui.Grid(container=True, spacing=2):
                         with mui.Grid(item=True, xs=12, sm=3):
                             mui.CardMedia(
@@ -94,13 +134,38 @@ def display_prediction_history(predictions):
                             )
                         with mui.Grid(item=True, xs=12, sm=8):
                             mui.CardContent(sx={"height": "100%"})(
-                                mui.Typography(f"Predicted Class: {prediction['predicted_class']}"),
-                                mui.Typography(f"Confidence: {prediction['confidence']:.2f}%"),
-                                mui.Typography(f"Date and Time: {prediction['timestamp']}")
+                                # Showing Predicted Class
+                                mui.Typography(
+                                    f"{prediction['predicted_class']}",
+                                    style={"fontSize": "1.5rem", "fontWeight": "bold", "color": color},
+                                    variant="h5"
+                                ),
+                                mui.Divider(),
+                                # Spacer
+                                mui.Box(sx={"height": 10}),
+                                mui.Typography(
+                                    f"Confidence of {prediction['confidence']:.2f}%",
+                                    style={"fontSize": "1rem", "fontWeight": "bold"}
+                                ),
+                                mui.Typography(
+                                    # Separate the date and time
+                                    f"Saved the date {prediction['timestamp'].split('T')[0]} at {prediction['timestamp'].split('T')[1].split('.')[0]}",
+                                    style={"fontSize": "0.9rem"}
+                                )
                             )
-                    mui.CardActions()(
-                        mui.Button("Details", size="small"),
-                    )
+                    with mui.CardActions(sx={"display": "flex", "justifyContent": "space-between"}):
+                        mui.Button(
+                            "Details", 
+                            size="small",
+                            sx={"backgroundColor": "skyblue", "color": "white"},
+                            onClick=lambda _, prediction=prediction: handle_details_click(prediction)                          
+                        )
+                        mui.Button(
+                            "Delete", 
+                            size="small",
+                            sx={"backgroundColor": "red", "color": "white", "marginLeft": "auto"},
+                            onClick=create_delete_callback(prediction_id, token)  # Use the callback function
+                        )
     else:
         st.info('No hay predicciones disponibles.')
 
@@ -147,7 +212,7 @@ def history_view():
     if 'authenticated' in st.session_state and st.session_state.authenticated:
         # Display prediction history
         predictions = get_prediction_history(st.session_state.token)
-        display_prediction_history(predictions)
+        display_prediction_history(predictions, st.session_state.token)
     else:
         st.warning('History is empty.')
         st.warning('Please login to view prediction history.')
