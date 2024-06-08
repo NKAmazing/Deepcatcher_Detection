@@ -7,10 +7,14 @@ import requests
 from streamlit_elements import elements, mui
 
 # Model paths
-model_paths = ['../detection_model/models/model_0.h5', '../detection_model/models/model_1.h5', '../detection_model/models/model_2.h5', '../detection_model/models/model_3.h5']
+model_paths = ['../detection_model/models/model_0.h5', '../detection_model/models/model_1.h5', 
+               '../detection_model/models/model_2.h5', '../detection_model/models/model_3.h5',
+               '../detection_model/models/model_4.h5']
 
 # Load the model
-model = tf.keras.models.load_model(model_paths[3])
+model = tf.keras.models.load_model(model_paths[4])
+
+st.set_page_config(page_title="Deepcatcher Demo", page_icon=":globe_with_meridians:")
 
 st.sidebar.title("Deepcatcher Demo")
 
@@ -63,9 +67,11 @@ def save_prediction(user_id, predicted_class, confidence, image_file, token):
     }
     response = requests.post(url_api, headers=headers, data=data, files=files)
     if response.status_code == 201:
-        st.success("Prediction Result successfully saved in the API.")
+        success_message = "Prediction successfully saved in the API."
+        st.success(success_message)
     else:
-        st.error(f"Error at saving the prediction result: {response.status_code} - {response.json()}")
+        error_message = f"Error at saving the prediction result: {response.status_code} - {response.json()}"
+        st.error(error_message)
 
 def get_prediction_history(token):
     url_api = "http://127.0.0.1:8000/user-service/predictions/"
@@ -155,9 +161,9 @@ def display_prediction_history(predictions, token):
                             )
                     with mui.CardActions(sx={"display": "flex", "justifyContent": "space-between"}):
                         mui.Button(
-                            "Details", 
+                            "Report", 
                             size="small",
-                            sx={"backgroundColor": "skyblue", "color": "white"},
+                            sx={"backgroundColor": "red", "color": "white"},
                             onClick=lambda _, prediction=prediction: handle_details_click(prediction)                          
                         )
                         mui.Button(
@@ -170,43 +176,80 @@ def display_prediction_history(predictions, token):
         st.info('No hay predicciones disponibles.')
 
 def predict_view():
-    st.title('Image Classification: Real vs. Fake')
+    # Header title for the predict view
+    st.header("Image Classification: Real vs. Fake")
+    
     # Set the File Uploader
     uploaded_files = st.file_uploader("Choose images...", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
     if uploaded_files:
         # Set the number of columns per row
         cols_per_row = 3
-        # Calculate the number of rows based on the number of uploaded files
-        rows = (len(uploaded_files) + cols_per_row - 1) // cols_per_row
-        # Iterate over the rows and columns to display the uploaded images
-        for row in range(rows):
-            cols = st.columns(cols_per_row)
-            for col_index in range(cols_per_row):
-                index = row * cols_per_row + col_index
-                if index < len(uploaded_files):
-                    uploaded_file = uploaded_files[index]
-                    with cols[col_index]:
-                        # Preprocess the uploaded image
-                        image = preprocess_image(uploaded_file, target_size=(96, 96))
 
-                        if image is not None:
-                            # Perform prediction
-                            predicted_class, confidence = predict(image, model)
+        if len(uploaded_files) <= 2:
+            cols = st.columns(len(uploaded_files))
+            for i, uploaded_file in enumerate(uploaded_files):
 
-                            if predicted_class is not None:
-                                # Display prediction result
-                                st.image(uploaded_file, caption=f'Uploaded Image ({predicted_class}, {confidence:.2f}%)', use_column_width=True)
-                                
-                                if st.button(f"Save Prediction {index+1}"):
-                                    # Check if the user is authenticated
-                                    if 'authenticated' in st.session_state and st.session_state.authenticated:
-                                        # Get the user ID
-                                        user_id = get_user_id(st.session_state.token)
-                                        # Save the prediction
+                # Set the index
+                index = i
+
+                # Preprocess the uploaded image
+                image = preprocess_image(uploaded_file, target_size=(96, 96))
+
+                if image is not None:
+                    # Perform prediction
+                    predicted_class, confidence = predict(image, model)
+
+                    if predicted_class is not None:
+                        # Display prediction result
+                        cols[i].image(uploaded_file, caption=f'Uploaded Image ({predicted_class}, {confidence:.2f}%)', use_column_width=True)
+
+                        # Place the save button in the correct column
+                        with cols[i]:
+                            # Save prediction button with index image
+                            if st.button(f"Save Prediction {index+1}"):
+                                # Check if the user is authenticated
+                                if 'authenticated' in st.session_state and st.session_state.authenticated:
+                                    # Get the user ID
+                                    user_id = get_user_id(st.session_state.token)
+                                    # Save the prediction
+                                    with st.expander("Prediction Status", expanded=True):
                                         save_prediction(user_id, predicted_class, confidence, uploaded_file, st.session_state.token)
-                                    else:
-                                        st.warning('Please login to save the prediction.')
+                                else:
+                                    st.warning('Please login to save the prediction.')
+        else:
+            # Calculate the number of rows based on the number of uploaded files
+            rows = (len(uploaded_files) + cols_per_row - 1) // cols_per_row
+            # Iterate over the rows and columns to display the uploaded images
+            for row in range(rows):
+                cols = st.columns(cols_per_row)
+                for col_index in range(cols_per_row):
+                    index = row * cols_per_row + col_index
+                    if index < len(uploaded_files):
+                        uploaded_file = uploaded_files[index]
+                        with cols[col_index]:
+                            # Preprocess the uploaded image
+                            image = preprocess_image(uploaded_file, target_size=(96, 96))
+
+                            if image is not None:
+                                # Perform prediction
+                                predicted_class, confidence = predict(image, model)
+
+                                if predicted_class is not None:
+                                    # Display prediction result
+                                    st.image(uploaded_file, caption=f'Uploaded Image ({predicted_class}, {confidence:.2f}%)', use_column_width=True)
+
+                                    # Save prediction button with index image            
+                                    if st.button(f"Save Prediction {index+1}"):
+                                        # Check if the user is authenticated
+                                        if 'authenticated' in st.session_state and st.session_state.authenticated:
+                                            # Get the user ID
+                                            user_id = get_user_id(st.session_state.token)
+                                            # Save the prediction
+                                            with st.expander("Prediction Status", expanded=True):
+                                                save_prediction(user_id, predicted_class, confidence, uploaded_file, st.session_state.token)
+                                        else:
+                                            st.warning('Please login to save the prediction.')
 
 def history_view():
     if 'authenticated' in st.session_state and st.session_state.authenticated:
@@ -219,6 +262,7 @@ def history_view():
 
 # Main Streamlit app
 def main():
+    st.title("Welcome to Deepcatcher Demo")
     selected_option = option_menu(
         menu_title="Main Menu",
         options=["Predict", "History"],
