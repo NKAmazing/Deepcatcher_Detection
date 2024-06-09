@@ -22,6 +22,12 @@ options = st.sidebar.radio("Select an option: ", ["Home"])
 
 # Function to preprocess the uploaded image
 def preprocess_image(image, target_size):
+    '''
+    Function to preprocess the uploaded image for prediction
+    params:
+        image: Uploaded image
+        target_size: Target size for the image
+    '''
     try:
         img = Image.open(image)
         img = img.convert("RGB")  # Convertir a RGB (en caso de que la imagen tenga canales alpha)
@@ -35,6 +41,12 @@ def preprocess_image(image, target_size):
 
 # Function to perform prediction
 def predict(image_data, model):
+    '''
+    Function to perform prediction on the image data using the model
+    params:
+        image_data: Preprocessed image data
+        model: Trained model
+    '''
     try:
         classes = ['Fake', 'Real']
         prediction = model.predict(image_data)
@@ -47,6 +59,11 @@ def predict(image_data, model):
         return None, None
 
 def get_user_id(token):
+    '''
+    Function to get the user ID from the API using the token
+    params:
+        token: Token of the authenticated user
+    '''
     url_api = "http://127.0.0.1:8000/user-service/user/id/"
     headers = {'Authorization': f'Token {token}'}
     response = requests.get(url_api, headers=headers)
@@ -57,6 +74,15 @@ def get_user_id(token):
         return None
 
 def save_prediction(user_id, predicted_class, confidence, image_file, token):
+    '''
+    Function to save the prediction result in the API
+    params:
+        user_id: User ID
+        predicted_class: Predicted class of the image (Real/Fake)
+        confidence: Confidence of the prediction
+        image_file: Uploaded image file to save
+        token: Token of the authenticated user
+    '''
     url_api = "http://127.0.0.1:8000/user-service/predictions/"
     headers = {'Authorization': f'Token {token}'}
     files = {'image': image_file}
@@ -73,17 +99,30 @@ def save_prediction(user_id, predicted_class, confidence, image_file, token):
         error_message = f"Error at saving the prediction result: {response.status_code} - {response.json()}"
         st.error(error_message)
 
-def get_prediction_history(token):
-    url_api = "http://127.0.0.1:8000/user-service/predictions/"
+def get_prediction_history(user_id, token):
+    '''
+    Function to get request to the API to get the prediction history for a user
+    params:
+        user_id: User ID
+        token: Token of the authenticated user
+    '''
+    url_api = f"http://127.0.0.1:8000/user-service/predictions/?user={user_id}"
     headers = {'Authorization': f'Token {token}'}
     response = requests.get(url_api, headers=headers)
     if response.status_code == 200:
         return response.json()
     else:
-        st.error(f"Error at getting predictions history: {response.status_code} - {response.json()}")
+        st.error(f"Error at getting predictions history for this user.")
+        st.error(f"The Error was: {response.status_code} - {response.json()}")
         return []
     
 def delete_prediction(prediction_id, token):
+    ''' 
+    Function to delete request to the API to delete a prediction
+    params:
+        prediction_id: Prediction ID to delete
+        token: Token of the authenticated user
+    '''
     url_api = f"http://127.0.0.1:8000/user-service/predictions/{prediction_id}/"
     headers = {'Authorization': f'Token {token}'}
     print("URL: ", url_api)  # Debugging print statement
@@ -107,8 +146,12 @@ def handle_details_click(prediction):
 
 # Function to create a delete callback
 def create_delete_callback(prediction_id, token):
-    ''' Define the callback function to set the prediction ID and 
+    ''' 
+    Define the callback function to set the prediction ID and 
     token and calls the delete_prediction function
+    params:
+        prediction_id: Prediction ID to delete
+        token: Token of the authenticated user
     '''
     def callback():
         delete_prediction(prediction_id, token)
@@ -118,6 +161,9 @@ def display_prediction_history(predictions, token):
     '''
     Display the prediction history in a card format 
     using Mui components of Streamlit-Elements
+    params:
+        predictions: List of prediction history
+        token: Token of the authenticated user
     '''
     if predictions:
         st.subheader('Predictions History')
@@ -176,6 +222,9 @@ def display_prediction_history(predictions, token):
         st.info('No hay predicciones disponibles.')
 
 def predict_view():
+    '''
+    Prediction view to upload images and display the prediction result
+    '''
     # Header title for the predict view
     st.header("Image Classification: Real vs. Fake")
     
@@ -212,9 +261,15 @@ def predict_view():
                                 if 'authenticated' in st.session_state and st.session_state.authenticated:
                                     # Get the user ID
                                     user_id = get_user_id(st.session_state.token)
-                                    # Save the prediction
-                                    with st.expander("Prediction Status", expanded=True):
-                                        save_prediction(user_id, predicted_class, confidence, uploaded_file, st.session_state.token)
+                                    # Get the current predictions saved of the user
+                                    predictions = get_prediction_history(user_id, st.session_state.token)
+                                    # Check if the user has already exceeded the limit of 10 saved predictions
+                                    if len(predictions) >= 10:
+                                        st.warning('You have reached the limit of 10 saved predictions.')
+                                    else:
+                                        # Save the prediction
+                                        with st.expander("Prediction Status", expanded=True):
+                                            save_prediction(user_id, predicted_class, confidence, uploaded_file, st.session_state.token)
                                 else:
                                     st.warning('Please login to save the prediction.')
         else:
@@ -222,11 +277,22 @@ def predict_view():
             rows = (len(uploaded_files) + cols_per_row - 1) // cols_per_row
             # Iterate over the rows and columns to display the uploaded images
             for row in range(rows):
+                # Create columns for each row
                 cols = st.columns(cols_per_row)
+
+                # Iterate over the columns in each row
                 for col_index in range(cols_per_row):
+
+                    # Calculate the index of the uploaded file
                     index = row * cols_per_row + col_index
+
+                    # Check if the index is less than the number of uploaded files
                     if index < len(uploaded_files):
+
+                        # Set the current uploaded file based on the index
                         uploaded_file = uploaded_files[index]
+
+                        # Set the column to display the uploaded image using the current column index
                         with cols[col_index]:
                             # Preprocess the uploaded image
                             image = preprocess_image(uploaded_file, target_size=(96, 96))
@@ -245,16 +311,30 @@ def predict_view():
                                         if 'authenticated' in st.session_state and st.session_state.authenticated:
                                             # Get the user ID
                                             user_id = get_user_id(st.session_state.token)
-                                            # Save the prediction
-                                            with st.expander("Prediction Status", expanded=True):
-                                                save_prediction(user_id, predicted_class, confidence, uploaded_file, st.session_state.token)
+
+                                            # Get the current predictions saved of the user
+                                            predictions = get_prediction_history(user_id, st.session_state.token)
+                                            
+                                            # Check if the user has already exceeded the limit of 10 saved predictions
+                                            if len(predictions) >= 10:
+                                                st.warning('You have reached the limit of 10 saved predictions.')
+                                            else:
+                                                # Save the prediction
+                                                with st.expander("Prediction Status", expanded=True):
+                                                    save_prediction(user_id, predicted_class, confidence, uploaded_file, st.session_state.token)
                                         else:
                                             st.warning('Please login to save the prediction.')
 
 def history_view():
+    ''' 
+    Prediction history view to display the prediction history 
+    '''
     if 'authenticated' in st.session_state and st.session_state.authenticated:
+        # Get the user ID
+        user_id = get_user_id(st.session_state.token)
+
         # Display prediction history
-        predictions = get_prediction_history(st.session_state.token)
+        predictions = get_prediction_history(user_id, st.session_state.token)
         display_prediction_history(predictions, st.session_state.token)
     else:
         st.warning('History is empty.')
@@ -262,6 +342,9 @@ def history_view():
 
 # Main Streamlit app
 def main():
+    '''
+    Main function to run the Streamlit page
+    '''
     st.title("Welcome to Deepcatcher Demo")
     selected_option = option_menu(
         menu_title="Main Menu",
