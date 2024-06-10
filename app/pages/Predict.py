@@ -12,13 +12,13 @@ model_paths = ['../detection_model/models/model_0.h5', '../detection_model/model
                '../detection_model/models/model_4.h5']
 
 # Load the model
-model = tf.keras.models.load_model(model_paths[4])
+model = tf.keras.models.load_model(model_paths[3])
 
-st.set_page_config(page_title="Deepcatcher Demo", page_icon=":globe_with_meridians:")
+st.set_page_config(page_title="Deepcatcher Demo", page_icon=":globe_with_meridians:", layout="wide", initial_sidebar_state="expanded")
 
 st.sidebar.title("Deepcatcher Demo")
 
-options = st.sidebar.radio("Select an option: ", ["Home"])
+options = st.sidebar.radio("Select an option: ", ["Main Menu"])
 
 # Function to preprocess the uploaded image
 def preprocess_image(image, target_size):
@@ -99,23 +99,27 @@ def save_prediction(user_id, predicted_class, confidence, image_file, token):
         error_message = f"Error at saving the prediction result: {response.status_code} - {response.json()}"
         st.error(error_message)
 
-def get_prediction_history(user_id, token):
-    '''
-    Function to get request to the API to get the prediction history for a user
-    params:
-        user_id: User ID
-        token: Token of the authenticated user
-    '''
-    url_api = f"http://127.0.0.1:8000/user-service/predictions/?user={user_id}"
-    headers = {'Authorization': f'Token {token}'}
-    response = requests.get(url_api, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error(f"Error at getting predictions history for this user.")
-        st.error(f"The Error was: {response.status_code} - {response.json()}")
-        return []
-    
+# ----------------------------------------------------------------------------------------------------------------
+# Report Functionality
+# ----------------------------------------------------------------------------------------------------------------
+
+# # Function to create a report callback
+# def handle_report_click(prediction_id):
+#     '''
+#     Define the handle report click function to navigate to the report page
+#     with the specific prediction to report
+#     params:
+#         prediction_id: Prediction ID to report
+#     '''
+#     def callback():
+#         st.experimental_set_query_params(page="Report", prediction_id=prediction_id)
+#         st.experimental_rerun()
+#     return callback
+
+# ----------------------------------------------------------------------------------------------------------------
+# Delete Functionality
+# ----------------------------------------------------------------------------------------------------------------
+
 def delete_prediction(prediction_id, token):
     ''' 
     Function to delete request to the API to delete a prediction
@@ -132,18 +136,6 @@ def delete_prediction(prediction_id, token):
     else:
         st.error(f"Error deleting the prediction: {response.status_code} - {response.json()}")
 
-def handle_details_click(prediction):
-    with mui.Dialog(open=True, onClose=lambda _: None):
-        mui.DialogTitle("Prediction Details")
-        mui.DialogContent()(
-            mui.DialogContentText(f"Predicted Class: {prediction['predicted_class']}"),
-            mui.DialogContentText(f"Confidence: {prediction['confidence']:.2f}%"),
-            mui.DialogContentText(f"Date and Time: {prediction['timestamp']}")
-        )
-        mui.DialogActions()(
-            mui.Button("Close", onClick=lambda _: None)
-        )
-
 # Function to create a delete callback
 def create_delete_callback(prediction_id, token):
     ''' 
@@ -156,6 +148,27 @@ def create_delete_callback(prediction_id, token):
     def callback():
         delete_prediction(prediction_id, token)
     return callback
+
+# ----------------------------------------------------------------------------------------------------------------
+# Prediction History View
+# ----------------------------------------------------------------------------------------------------------------
+
+def get_prediction_history(user_id, token):
+    '''
+    Function to get request to the API to get the prediction history for a user
+    params:
+        user_id: User ID
+        token: Token of the authenticated user
+    '''
+    url_api = f"http://127.0.0.1:8000/user-service/predictions/?user={user_id}"
+    headers = {'Authorization': f'Token {token}'}
+    response = requests.get(url_api, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error(f"Error at getting predictions history for this user.")
+        st.error(f"The Error was: {response.status_code} - {response.json()}")
+        return []
 
 def display_prediction_history(predictions, token):
     '''
@@ -174,7 +187,10 @@ def display_prediction_history(predictions, token):
                 # Determine the color of the typography based on the predicted class
                 color = "green" if prediction['predicted_class'] == 'Real' else "red"
 
-                with mui.Card(sx={"maxWidth": 700, "margin": "20px auto", "border-radius": 10, "border": f"2px solid {color}", "boxShadow": "0 0 10px rgba(0, 0, 0, 0.1)"}, variant="outlined"):
+                with mui.Card(sx={"maxWidth": 700, "margin": "20px auto", "border-radius": 10, 
+                                  "border": f"2px solid {color}", 
+                                  "boxShadow": "0 0 10px rgba(0, 0, 0, 0.1)"}, 
+                                  variant="outlined"):
                     with mui.Grid(container=True, spacing=2):
                         with mui.Grid(item=True, xs=12, sm=3):
                             mui.CardMedia(
@@ -206,11 +222,12 @@ def display_prediction_history(predictions, token):
                                 )
                             )
                     with mui.CardActions(sx={"display": "flex", "justifyContent": "space-between"}):
+                        # Report Button
                         mui.Button(
-                            "Report", 
+                            "Report",
                             size="small",
-                            sx={"backgroundColor": "red", "color": "white"},
-                            onClick=lambda _, prediction=prediction: handle_details_click(prediction)                          
+                            sx={"backgroundColor": "orange", "color": "white"},
+                            # onClick=handle_report_click(prediction_id)  # Use the callback function
                         )
                         mui.Button(
                             "Delete", 
@@ -220,6 +237,25 @@ def display_prediction_history(predictions, token):
                         )
     else:
         st.info('No hay predicciones disponibles.')
+
+def history_view():
+    ''' 
+    Prediction history view to display the prediction history 
+    '''
+    if 'authenticated' in st.session_state and st.session_state.authenticated:
+        # Get the user ID
+        user_id = get_user_id(st.session_state.token)
+
+        # Display prediction history
+        predictions = get_prediction_history(user_id, st.session_state.token)
+        display_prediction_history(predictions, st.session_state.token)
+    else:
+        st.warning('History is empty.')
+        st.warning('Please login to view prediction history.')
+
+# ----------------------------------------------------------------------------------------------------------------
+# Prediction View
+# ----------------------------------------------------------------------------------------------------------------
 
 def predict_view():
     '''
@@ -325,20 +361,7 @@ def predict_view():
                                         else:
                                             st.warning('Please login to save the prediction.')
 
-def history_view():
-    ''' 
-    Prediction history view to display the prediction history 
-    '''
-    if 'authenticated' in st.session_state and st.session_state.authenticated:
-        # Get the user ID
-        user_id = get_user_id(st.session_state.token)
-
-        # Display prediction history
-        predictions = get_prediction_history(user_id, st.session_state.token)
-        display_prediction_history(predictions, st.session_state.token)
-    else:
-        st.warning('History is empty.')
-        st.warning('Please login to view prediction history.')
+# ----------------------------------------------------------------------------------------------------------------
 
 # Main Streamlit app
 def main():
