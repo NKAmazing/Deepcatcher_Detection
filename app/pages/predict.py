@@ -14,7 +14,9 @@ model_paths = ['../detection_model/models/model_0.h5', '../detection_model/model
 # Load the model
 model = tf.keras.models.load_model(model_paths[3])
 
-st.set_page_config(page_title="Deepcatcher Demo", page_icon=":globe_with_meridians:", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Deepcatcher Demo", page_icon=":globe_with_meridians:")
+
+# layout="wide", initial_sidebar_state="expanded"
 
 st.sidebar.title("Deepcatcher Demo")
 
@@ -103,18 +105,18 @@ def save_prediction(user_id, predicted_class, confidence, image_file, token):
 # Report Functionality
 # ----------------------------------------------------------------------------------------------------------------
 
-# # Function to create a report callback
-# def handle_report_click(prediction_id):
-#     '''
-#     Define the handle report click function to navigate to the report page
-#     with the specific prediction to report
-#     params:
-#         prediction_id: Prediction ID to report
-#     '''
-#     def callback():
-#         st.experimental_set_query_params(page="Report", prediction_id=prediction_id)
-#         st.experimental_rerun()
-#     return callback
+# Function to create a report callback
+def handle_report_click(prediction_id):
+    '''
+    Define the handle report click function to navigate to the report page
+    with the specific prediction to report
+    params:
+        prediction_id: Prediction ID to report
+    '''
+    def callback():
+        st.experimental_set_query_params(page="Report", prediction_id=prediction_id)
+        st.experimental_rerun()
+    return callback
 
 # ----------------------------------------------------------------------------------------------------------------
 # Delete Functionality
@@ -227,7 +229,7 @@ def display_prediction_history(predictions, token):
                             "Report",
                             size="small",
                             sx={"backgroundColor": "orange", "color": "white"},
-                            # onClick=handle_report_click(prediction_id)  # Use the callback function
+                            onClick=handle_report_click(prediction_id)
                         )
                         mui.Button(
                             "Delete", 

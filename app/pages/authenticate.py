@@ -21,6 +21,9 @@ if 'authenticated' not in st.session_state:
 if 'token' not in st.session_state:
     st.session_state.token = None
 
+if 'token' not in st.session_state:
+    st.session_state.token = None
+
 # Formulario de inicio de sesión
 if not st.session_state.authenticated:
     username = st.text_input("Usuario")
@@ -28,7 +31,8 @@ if not st.session_state.authenticated:
     if st.button("Iniciar sesión"):
         token = authenticate(username, password)
         if token:
-            print("Este es el token", token)
+            # Asigno el nombre de usuario y el token a la sesión
+            st.session_state.username = username
             st.session_state.token = token
             st.session_state.authenticated = True
             st.experimental_rerun()
@@ -38,9 +42,7 @@ if not st.session_state.authenticated:
 # Contenido visible solo si está autenticado
 if st.session_state.authenticated:
     st.success("¡Has iniciado sesión!")
-    st.write("Contenido exclusivo para usuarios autenticados.")
-
-    st.write("Token de autenticación:", st.session_state.token)
+    st.write(f"Bienvenido de nuevo {st.session_state.username}!")
     
     # Aquí puedes agregar tu historial de uso de la aplicación
     st.subheader("Historial de uso de la aplicación")

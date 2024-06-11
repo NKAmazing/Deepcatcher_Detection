@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from pages.utils.api_requests import get_user_id, get_prediction_history
 
 def main():
     # Verificar autenticación
@@ -48,14 +49,6 @@ def main():
             st.success("Report successfully submitted.")
         else:
             st.error(f"Error submitting the report: {response.status_code} - {response.json()}")
-
-def get_user_id(token):
-    # Implementar la función para obtener el ID del usuario autenticado
-    pass
-
-def get_prediction_history(user_id, token):
-    # Implementar la función para obtener el historial de predicciones del usuario
-    pass
 
 if __name__ == "__main__":
     main()
