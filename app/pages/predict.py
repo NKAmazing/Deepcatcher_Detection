@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 import requests
 from streamlit_elements import elements, mui
+# from streamlit_extras.switch_page_button import switch_page
 
 # Model paths
 model_paths = ['../detection_model/models/model_0.h5', '../detection_model/models/model_1.h5', 
@@ -102,23 +103,6 @@ def save_prediction(user_id, predicted_class, confidence, image_file, token):
         st.error(error_message)
 
 # ----------------------------------------------------------------------------------------------------------------
-# Report Functionality
-# ----------------------------------------------------------------------------------------------------------------
-
-# Function to create a report callback
-def handle_report_click(prediction_id):
-    '''
-    Define the handle report click function to navigate to the report page
-    with the specific prediction to report
-    params:
-        prediction_id: Prediction ID to report
-    '''
-    def callback():
-        st.experimental_set_query_params(page="Report", prediction_id=prediction_id)
-        st.experimental_rerun()
-    return callback
-
-# ----------------------------------------------------------------------------------------------------------------
 # Delete Functionality
 # ----------------------------------------------------------------------------------------------------------------
 
@@ -184,7 +168,8 @@ def display_prediction_history(predictions, token):
         st.subheader('Predictions History')
         with elements("history"):
             for prediction in predictions:
-                prediction_id = prediction['id']  # Ensure the ID is captured correctly
+                # Capture the prediction ID
+                prediction_id = prediction['id']
 
                 # Determine the color of the typography based on the predicted class
                 color = "green" if prediction['predicted_class'] == 'Real' else "red"
@@ -224,18 +209,12 @@ def display_prediction_history(predictions, token):
                                 )
                             )
                     with mui.CardActions(sx={"display": "flex", "justifyContent": "space-between"}):
-                        # Report Button
-                        mui.Button(
-                            "Report",
-                            size="small",
-                            sx={"backgroundColor": "orange", "color": "white"},
-                            onClick=handle_report_click(prediction_id)
-                        )
+                        # Delete Button
                         mui.Button(
                             "Delete", 
                             size="small",
                             sx={"backgroundColor": "red", "color": "white", "marginLeft": "auto"},
-                            onClick=create_delete_callback(prediction_id, token)  # Use the callback function
+                            onClick=create_delete_callback(prediction_id, token) # Using a callback function
                         )
     else:
         st.info('No hay predicciones disponibles.')

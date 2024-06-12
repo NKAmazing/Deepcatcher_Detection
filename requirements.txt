@@ -2,7 +2,7 @@ matplotlib==3.8.4
 opencv-python==4.9.0.80
 pillow==10.3.0
 scipy==1.13.0
-streamlit==1.22.0
+streamlit==1.35.0
 pandas==2.2.2
 seaborn==0.13.2
 streamlit-option-menu==0.3.12
@@ -10,3 +10,4 @@ requests==2.31.0
 streamlit-elements==0.1.0
 streamlit-modal==0.1.2
 st-pages==0.4.5
+streamlit-extras==0.4.3
