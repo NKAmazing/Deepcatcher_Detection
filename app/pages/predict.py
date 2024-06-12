@@ -5,7 +5,6 @@ import numpy as np
 from PIL import Image
 import requests
 from streamlit_elements import elements, mui
-# from streamlit_extras.switch_page_button import switch_page
 
 # Model paths
 model_paths = ['../detection_model/models/model_0.h5', '../detection_model/models/model_1.h5', 
@@ -118,21 +117,27 @@ def delete_prediction(prediction_id, token):
     print("URL: ", url_api)  # Debugging print statement
     response = requests.delete(url_api, headers=headers)
     if response.status_code == 204:
-        st.success("Prediction successfully deleted.")
+        return True, None  # Success, no error message
     else:
-        st.error(f"Error deleting the prediction: {response.status_code} - {response.json()}")
+        return False, f"Error deleting the prediction: {response.status_code} - {response.json()}"
 
 # Function to create a delete callback
-def create_delete_callback(prediction_id, token):
+def create_delete_callback(prediction_id, token, success_callback, error_callback):
     ''' 
     Define the callback function to set the prediction ID and 
     token and calls the delete_prediction function
     params:
         prediction_id: Prediction ID to delete
         token: Token of the authenticated user
+        success_callback: Callback function to handle success message
+        error_callback: Callback function to handle error message
     '''
     def callback():
-        delete_prediction(prediction_id, token)
+        success, error_message = delete_prediction(prediction_id, token)
+        if success:
+            success_callback()
+        else:
+            error_callback(error_message)
     return callback
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -166,19 +171,33 @@ def display_prediction_history(predictions, token):
     '''
     if predictions:
         st.subheader('Predictions History')
+
+        # Set the elements container to display the history
         with elements("history"):
+
+            # Sort by timestamp descending
+            predictions = sorted(predictions, key=lambda x: x['timestamp'], reverse=True)  
+
+            # Iterate over the predictions
             for prediction in predictions:
-                # Capture the prediction ID
-                prediction_id = prediction['id']
+
+                # Ensure the ID is captured correctly
+                prediction_id = prediction['id']  
 
                 # Determine the color of the typography based on the predicted class
                 color = "green" if prediction['predicted_class'] == 'Real' else "red"
 
+                # Placeholder to display the prediction
+                placeholder = st.empty()
+
+                # Display the prediction in a card format
                 with mui.Card(sx={"maxWidth": 700, "margin": "20px auto", "border-radius": 10, 
                                   "border": f"2px solid {color}", 
                                   "boxShadow": "0 0 10px rgba(0, 0, 0, 0.1)"}, 
                                   variant="outlined"):
+                    # Card content
                     with mui.Grid(container=True, spacing=2):
+                        # Display the image of the prediction
                         with mui.Grid(item=True, xs=12, sm=3):
                             mui.CardMedia(
                                 component="img",
@@ -187,6 +206,7 @@ def display_prediction_history(predictions, token):
                                 image=prediction['image'],  
                                 alt="Image Prediction"
                             )
+                        # Display the prediction details
                         with mui.Grid(item=True, xs=12, sm=8):
                             mui.CardContent(sx={"height": "100%"})(
                                 # Showing Predicted Class
@@ -208,16 +228,35 @@ def display_prediction_history(predictions, token):
                                     style={"fontSize": "0.9rem"}
                                 )
                             )
+                    # Card actions
                     with mui.CardActions(sx={"display": "flex", "justifyContent": "space-between"}):
-                        # Delete Button
+                        # Delete button for the prediction
                         mui.Button(
                             "Delete", 
                             size="small",
                             sx={"backgroundColor": "red", "color": "white", "marginLeft": "auto"},
-                            onClick=create_delete_callback(prediction_id, token) # Using a callback function
+                            onClick=create_delete_callback(prediction_id, token, 
+                                               lambda: show_delete_success(placeholder), 
+                                               lambda error_message: show_delete_error(placeholder, error_message))  # Use the callback function
                         )
     else:
         st.info('No hay predicciones disponibles.')
+
+def show_delete_success(placeholder):
+    '''
+    Show success message after deleting a prediction
+    '''
+    with placeholder:
+        with st.expander("Delete Status", expanded=True):
+            st.success(f"Prediction successfully deleted.")
+
+def show_delete_error(placeholder, error_message):
+    '''
+    Show error message after failed to delete a prediction
+    '''
+    with placeholder:
+        with st.expander("Delete Status", expanded=True):
+            st.error(f"Error deleting prediction: {error_message}")
 
 def history_view():
     ''' 

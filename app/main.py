@@ -9,7 +9,7 @@ show_pages(
     [
         Page("main.py", "Home", "🏠"),
         Page("pages/predict.py", "Prediction", "🔮"),
-        Page("pages/authenticate.py", "Sign In", "🔒"),
+        Page("pages/authenticate.py", "User Authentication", "🔒"),
         Page("pages/report.py", "Report", "📝"),
         # Page("pages/information.py", "Information", "📄")
     ]

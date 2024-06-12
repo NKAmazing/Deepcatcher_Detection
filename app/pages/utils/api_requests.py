@@ -38,3 +38,24 @@ def get_user_id(token):
         return response.json().get('user_id')
     else:
         return ("Error at getting the User ID.")
+    
+# ----------------------------------------------------------------------------------------
+# Report Requests
+# ----------------------------------------------------------------------------------------
+
+def get_user_reports(user_id, token):
+    '''
+    Function to get the reports submitted by a user
+    params:
+        user_id: The ID of the user
+        token: Authentication token
+    returns:
+        List of reports
+    '''
+    url_api = f'http://127.0.0.1:8000/user-service/reports/user_reports/?user={user_id}'
+    headers = {'Authorization': f'Token {token}'}
+    response = requests.get(url_api, headers=headers)
+    if response.status_code == 200:
+        return response.json()  # Assuming the API returns a JSON list of reports
+    else:
+        return (f"Error fetching reports: {response.status_code} - {response.json()}")

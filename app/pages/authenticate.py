@@ -120,12 +120,11 @@ def main():
     '''
     Main function of the authenticate page
     '''
-    st.title("Welcome to Deepcatcher Demo")
     selected_option = option_menu(
         menu_title="User Authentication",
         options=["Sign In", "Sign Up"],
         icons=["sign-in", "user-add"],
-        menu_icon="cast",
+        menu_icon="lock",
         default_index=0,
         orientation="horizontal", # orientation: horizontal (default) or vertical
     )
