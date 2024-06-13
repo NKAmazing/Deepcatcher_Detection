@@ -68,11 +68,15 @@ def get_user_id(token):
     '''
     url_api = "http://127.0.0.1:8000/user-service/user/id/"
     headers = {'Authorization': f'Token {token}'}
-    response = requests.get(url_api, headers=headers)
-    if response.status_code == 200:
-        return response.json().get('user_id')
-    else:
-        st.error("Error at getting the User ID.")
+    try:
+        response = requests.get(url_api, headers=headers)
+        if response.status_code == 200:
+            return response.json().get('user_id')
+        else:
+            st.error(f"Error at getting the User ID. Status Code: {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"Error at making the request: {str(e)}")
         return None
 
 def save_prediction(user_id, predicted_class, confidence, image_file, token):
@@ -266,9 +270,13 @@ def history_view():
         # Get the user ID
         user_id = get_user_id(st.session_state.token)
 
-        # Display prediction history
-        predictions = get_prediction_history(user_id, st.session_state.token)
-        display_prediction_history(predictions, st.session_state.token)
+        # If the user ID is available
+        if user_id:
+            # Display prediction history
+            predictions = get_prediction_history(user_id, st.session_state.token)
+            display_prediction_history(predictions, st.session_state.token)
+        else:
+            st.error('Unable to get the user ID.')
     else:
         st.warning('History is empty.')
         st.warning('Please login to view prediction history.')

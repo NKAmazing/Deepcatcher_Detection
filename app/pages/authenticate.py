@@ -48,11 +48,11 @@ def register(username, email, password):
             return response.json().get('username')
         elif response.status_code == 400:
             error_message = parse_error_message(response)
-            st.error(f"Error de registro de usuario: {error_message}")
+            st.error(f"User Registration Error: {error_message}")
         else:
-            st.error("Error de registro de usuario.")
+            st.error("User Registration Error.")
     except Exception as e:
-        st.error(f"Error de conexión: {e}")
+        st.error(f"Connection Error: {e}")
         return None
     
 def parse_error_message(response):

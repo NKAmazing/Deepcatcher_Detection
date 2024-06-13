@@ -67,10 +67,12 @@ def reports_history_view():
     if reports:
         st.subheader("Reports History")
         for report in reports:
-            with st.expander(f"Report: {report['title']} - {report['timestamp']}"):
+            status_color = "yellow" if report['status'] == 'Pending' else "green"
+            with st.expander(f"Report: {report['title']} - {report['timestamp'].split('T')[0]} at {report['timestamp'].split('T')[1].split('.')[0]}"):
                 st.write(f"**Title:** {report['title']}")
                 st.write(f"**Description:** {report['description']}")
-                st.write(f"**Reported on:** {report['timestamp']}")
+                st.write(f"**Reported on:** {report['timestamp'].split('T')[0]} at {report['timestamp'].split('T')[1].split('.')[0]}")
+                st.markdown(f"**Status:** <span style='color:{status_color}'>**{report['status']}**</span>", unsafe_allow_html=True)
     else:
         st.info("No reports found.")
 
