@@ -26,7 +26,6 @@ def get_prediction_history(user_id, token):
     else:
         return (f"Error at getting predictions history for this user.", 
                 f"The Error was: {response.status_code} - {response.json()}")
-    
 
 # ----------------------------------------------------------------------------------------
 # User Requests
