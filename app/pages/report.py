@@ -25,7 +25,7 @@ def report_view():
 
     # Show a select box to choose a prediction
     st.subheader("Select a Prediction to Report")
-    prediction_options = {f"{p['predicted_class']} - {p['timestamp']}": p['id'] for p in predictions}
+    prediction_options = {f"{p['predicted_class']} - {p['timestamp'].split('T')[0]} at {p['timestamp'].split('T')[1].split('.')[0]}": p['id'] for p in predictions}
     selected_prediction = st.selectbox("Choose a prediction", options=list(prediction_options.keys()))
     prediction_id = prediction_options[selected_prediction]
 

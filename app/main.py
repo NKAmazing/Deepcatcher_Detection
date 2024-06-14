@@ -40,6 +40,7 @@ def main():
     with cent_co:
         st.image("pages/media/images/Deepcatcher.png", width=500, caption="Deepcatcher - Deepfake Detection App")
 
+    # Add information about the app through a markdown
     st.markdown(
         """
         <div style="text-align: center;">

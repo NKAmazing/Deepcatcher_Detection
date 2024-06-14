@@ -6,6 +6,7 @@ st.set_page_config(page_title="About Deepcatcher", page_icon="📄", initial_sid
 def about():
     st.title("About Deepcatcher")
 
+    # Add information about the app and the project through a markdown
     st.markdown(
         """
         ## Abstract

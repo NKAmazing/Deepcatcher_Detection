@@ -6,7 +6,7 @@ from PIL import Image
 import requests
 from streamlit_elements import elements, mui
 
-# Model paths
+# List of Model paths
 model_paths = ['../detection_model/models/model_0.h5', '../detection_model/models/model_1.h5', 
                '../detection_model/models/model_2.h5', '../detection_model/models/model_3.h5',
                '../detection_model/models/model_4.h5']
@@ -14,12 +14,13 @@ model_paths = ['../detection_model/models/model_0.h5', '../detection_model/model
 # Load the model
 model = tf.keras.models.load_model(model_paths[3])
 
+# Set the page configuration
 st.set_page_config(page_title="Deepcatcher Demo - Prediction", page_icon=":computer:")
 
-# layout="wide", initial_sidebar_state="expanded"
-
+# Set the sidebar title
 st.sidebar.title("Deepcatcher Demo")
 
+# Set the options in the sidebar
 options = st.sidebar.radio("Select an option: ", ["Predict Menu", "Tutorial"])
 
 # Function to preprocess the uploaded image
@@ -31,11 +32,21 @@ def preprocess_image(image, target_size):
         target_size: Target size for the image
     '''
     try:
+        # Open the image
         img = Image.open(image)
-        img = img.convert("RGB")  # Convertir a RGB (en caso de que la imagen tenga canales alpha)
-        img = img.resize(target_size)  # Resize
-        img = np.array(img) / 255.0    # Normalizar
-        img = np.expand_dims(img, axis=0)  # Añadir dimensión del lote
+
+        # Convert to RGB (in case of alpha channel)
+        img = img.convert("RGB")
+
+        # Resize the image with the target size
+        img = img.resize(target_size)
+
+        # Convert to numpy array and normalize
+        img = np.array(img) / 255.0
+
+        # Expand the dimensions for the batch
+        img = np.expand_dims(img, axis=0)
+
         return img
     except Exception as e:
         st.error(f"Error: {str(e)}")
@@ -50,11 +61,21 @@ def predict(image_data, model):
         model: Trained model
     '''
     try:
+        # Define the classes
         classes = ['Fake', 'Real']
+
+        # Perform prediction on the image data
         prediction = model.predict(image_data)
+
+        # Get the prediction values
         pred_values = tf.squeeze(prediction).numpy()
+
+        # Get the predicted class
         prediction = classes[tf.argmax(pred_values)]
+
+        # Get the confidence of the prediction
         confidence = pred_values[tf.argmax(pred_values)] * 100
+
         return prediction, confidence
     except Exception as e:
         st.error(f"Prediction Error: {str(e)}")
@@ -66,13 +87,21 @@ def get_user_id(token):
     params:
         token: Token of the authenticated user
     '''
+    # Set the URL of the API
     url_api = "http://127.0.0.1:8000/user-service/user/id/"
+
+    # Set the headers with the token
     headers = {'Authorization': f'Token {token}'}
     try:
+        # Make the GET request to the API
         response = requests.get(url_api, headers=headers)
+
+        # Check the status code of the response
         if response.status_code == 200:
+            # If the response is successful, return the user ID
             return response.json().get('user_id')
         else:
+            # If there is an error, display the error message
             st.error(f"Error at getting the User ID. Status Code: {response.status_code}")
             return None
     except Exception as e:
@@ -89,19 +118,30 @@ def save_prediction(user_id, predicted_class, confidence, image_file, token):
         image_file: Uploaded image file to save
         token: Token of the authenticated user
     '''
+    # Set the URL of the API
     url_api = "http://127.0.0.1:8000/user-service/predictions/"
+
+    # Set the headers with the token
     headers = {'Authorization': f'Token {token}'}
+
+    # Set the data and files to send in the POST request
     files = {'image': image_file}
     data = {
         'predicted_class': predicted_class,
         'confidence': confidence,
         'user': user_id,
     }
+
+    # Make the POST request to the API
     response = requests.post(url_api, headers=headers, data=data, files=files)
+
+    # Check the status code of the response
     if response.status_code == 201:
+        # If the response is successful, display the success message
         success_message = "Prediction successfully saved in the API."
         st.success(success_message)
     else:
+        # If there is an error, display the error message
         error_message = f"Error at saving the prediction result: {response.status_code} - {response.json()}"
         st.error(error_message)
 
@@ -116,10 +156,16 @@ def delete_prediction(prediction_id, token):
         prediction_id: Prediction ID to delete
         token: Token of the authenticated user
     '''
+    # Set the URL of the API
     url_api = f"http://127.0.0.1:8000/user-service/predictions/{prediction_id}/"
+
+    # Set the headers with the token
     headers = {'Authorization': f'Token {token}'}
-    print("URL: ", url_api)  # Debugging print statement
+
+    # Make the DELETE request to the API
     response = requests.delete(url_api, headers=headers)
+
+    # Check the status code of the response
     if response.status_code == 204:
         return True, None  # Success, no error message
     else:
@@ -136,12 +182,16 @@ def create_delete_callback(prediction_id, token, success_callback, error_callbac
         success_callback: Callback function to handle success message
         error_callback: Callback function to handle error message
     '''
+    # Define the callback function
     def callback():
+        # Call the delete prediction function
         success, error_message = delete_prediction(prediction_id, token)
+
+        # Check if the deletion was successful
         if success:
-            success_callback()
+            success_callback() # Call the success callback
         else:
-            error_callback(error_message)
+            error_callback(error_message) # Call the error callback
     return callback
 
 # ----------------------------------------------------------------------------------------------------------------
@@ -155,12 +205,21 @@ def get_prediction_history(user_id, token):
         user_id: User ID
         token: Token of the authenticated user
     '''
+    # Set the URL of the API
     url_api = f"http://127.0.0.1:8000/user-service/predictions/?user={user_id}"
+
+    # Set the headers with the token
     headers = {'Authorization': f'Token {token}'}
+
+    # Make the GET request to the API
     response = requests.get(url_api, headers=headers)
+
+    # Check the status code of the response
     if response.status_code == 200:
+        # If the response is successful, return the predictions
         return response.json()
     else:
+        # If there is an error, display the error message
         st.error(f"Error at getting predictions history for this user.")
         st.error(f"The Error was: {response.status_code} - {response.json()}")
         return []
@@ -250,6 +309,7 @@ def show_delete_success(placeholder):
     '''
     Show success message after deleting a prediction
     '''
+    # Display the success message after deleting the prediction
     with placeholder:
         with st.expander("Delete Status", expanded=True):
             st.success(f"Prediction successfully deleted.")
@@ -258,6 +318,7 @@ def show_delete_error(placeholder, error_message):
     '''
     Show error message after failed to delete a prediction
     '''
+    # Display the error message after failing to delete the prediction
     with placeholder:
         with st.expander("Delete Status", expanded=True):
             st.error(f"Error deleting prediction: {error_message}")
@@ -272,8 +333,10 @@ def history_view():
 
         # If the user ID is available
         if user_id:
-            # Display prediction history
+            # Get the predictions of the user
             predictions = get_prediction_history(user_id, st.session_state.token)
+
+            # Call the function to display the prediction history
             display_prediction_history(predictions, st.session_state.token)
         else:
             st.error('Unable to get the user ID.')
@@ -325,8 +388,10 @@ def predict_view():
                                 if 'authenticated' in st.session_state and st.session_state.authenticated:
                                     # Get the user ID
                                     user_id = get_user_id(st.session_state.token)
+
                                     # Get the current predictions saved of the user
                                     predictions = get_prediction_history(user_id, st.session_state.token)
+
                                     # Check if the user has already exceeded the limit of 10 saved predictions
                                     if len(predictions) >= 10:
                                         st.warning('You have reached the limit of 10 saved predictions.')
@@ -339,6 +404,7 @@ def predict_view():
         else:
             # Calculate the number of rows based on the number of uploaded files
             rows = (len(uploaded_files) + cols_per_row - 1) // cols_per_row
+
             # Iterate over the rows and columns to display the uploaded images
             for row in range(rows):
                 # Create columns for each row
@@ -390,6 +456,8 @@ def predict_view():
                                             st.warning('Please login to save the prediction.')
 
 # ----------------------------------------------------------------------------------------------------------------
+# Tutorial Option
+# ----------------------------------------------------------------------------------------------------------------
 
 def tutorial_option():
     st.markdown(
@@ -409,7 +477,7 @@ def tutorial_option():
             - **Authentication**: To save predictions, you need to be logged in. Use the **User Authentication** option in the sidebar to sign in or sign up.
             - **Prediction Limit**: You can save up to 10 predictions. Once you reach the limit, you will not be able to save more predictions.
 
-            ### Interactive Help Video
+            ### Help Guide Video
             - Watch the video below to learn more about how to use the Deepcatcher Demo Prediction page.
                 
             """
@@ -425,13 +493,18 @@ def tutorial_option():
         """
     )
 
+# ----------------------------------------------------------------------------------------------------------------
+
 # Main Streamlit app
 def main():
     '''
     Main function to run the Streamlit page
     '''
     st.title("Deepcatcher Demo")
+
+    # Check the selected option of the sidebar
     if options == "Predict Menu":
+        # Show the prediction main menu
         selected_option = option_menu(
             menu_title="Prediction Main Menu",
             options=["Predict", "History"],
@@ -440,11 +513,13 @@ def main():
             default_index=0,
             orientation="horizontal", # orientation: horizontal (default) or vertical
         )
+        # Check the selected option of the menu
         if selected_option == "Predict":
             predict_view()
         elif selected_option == "History":
             history_view()
     elif options == "Tutorial":
+        # Show the tutorial option
         tutorial_option()
     else:
         st.error("Invalid option selected.")
