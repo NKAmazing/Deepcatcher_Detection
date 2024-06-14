@@ -47,7 +47,8 @@ def register(username, email, password):
     try:
         response = requests.post(url_api, data=data)
         if response.status_code == 201:
-            return response.json().get('username')
+            response_data = response.json()
+            return response_data
         elif response.status_code == 400:
             error_message = parse_error_message(response)
             st.error(f"User Registration Error: {error_message}")
@@ -104,18 +105,33 @@ def register_view():
     View for the register page
     '''
     st.title("Sign Up")
+
+    # Input fields for the registration form
     username = st.text_input("Username")
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
+    repeat_password = st.text_input("Repeat Password", type="password")
+
+    # Button to submit the registration form
     if st.button("Sign Up"):
-        response = register(username, email, password)
-        if response:
-            st.session_state.username = capitalize_first(username)
-            st.session_state.authenticated = True
-            st.success("You have signed up successfully!")
-            st.success(f"You have automatically logged in. Welcome {st.session_state.username}!")
-        else:
-            st.error("Sign Up failed")
+
+        # Check if the passwords match
+        if password == repeat_password and password != "":
+
+            # Call the register function to create a new user
+            response = register(username, email, password)
+
+            # Check if the registration was successful
+            if response:
+                st.session_state.username = capitalize_first(username)
+                st.session_state.authenticated = True
+                st.session_state.token = response.get('token')
+                st.success("You have signed up successfully!")
+                st.success(f"You have automatically logged in. Welcome {st.session_state.username}!")
+            else:
+                st.error("Sign Up failed")
+        elif password != repeat_password:
+            st.error("Passwords do not match.")
 
 # Main function of the authenticate page
 def main():
