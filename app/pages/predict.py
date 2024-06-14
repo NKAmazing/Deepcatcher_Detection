@@ -14,7 +14,7 @@ model_paths = ['../detection_model/models/model_0.h5', '../detection_model/model
 # Load the model
 model = tf.keras.models.load_model(model_paths[3])
 
-st.set_page_config(page_title="Deepcatcher Demo", page_icon=":globe_with_meridians:")
+st.set_page_config(page_title="Deepcatcher Demo - Prediction", page_icon=":computer:")
 
 # layout="wide", initial_sidebar_state="expanded"
 
@@ -396,7 +396,7 @@ def main():
     '''
     Main function to run the Streamlit page
     '''
-    st.title("Welcome to Deepcatcher Demo")
+    st.title("Deepcatcher Demo")
     selected_option = option_menu(
         menu_title="Main Menu",
         options=["Predict", "History"],

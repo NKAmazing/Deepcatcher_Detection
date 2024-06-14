@@ -3,6 +3,8 @@ import requests
 from streamlit_option_menu import option_menu
 from pages.utils.helpers import capitalize_first
 
+st.set_page_config(page_title="Deepcatcher Demo - User Authentication", page_icon=":lock:")
+
 # Variable to store the authentication state
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False

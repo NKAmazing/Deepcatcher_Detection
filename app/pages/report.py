@@ -3,6 +3,9 @@ import requests
 from pages.utils.api_requests import get_user_id, get_prediction_history, get_user_reports
 from streamlit_option_menu import option_menu
 
+# Set the page configuration
+st.set_page_config(page_title="Deepcatcher Demo - Home", page_icon=":clipboard:")
+
 def report_view():
     # Verify user authentication
     if 'authenticated' not in st.session_state or not st.session_state.authenticated:
