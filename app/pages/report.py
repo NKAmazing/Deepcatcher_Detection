@@ -34,7 +34,7 @@ def report_view():
     if prediction:
         st.subheader("Selected Prediction")
         st.image(prediction['image'], caption=f"{prediction['predicted_class']} - {prediction['confidence']:.2f}%")
-        st.write(f"Prediction made on {prediction['timestamp']}")
+        st.write(f"Prediction made on {prediction['timestamp'].split('T')[0]} at {prediction['timestamp'].split('T')[1].split('.')[0]}")
 
     # Report form
     st.subheader("Report Prediction")

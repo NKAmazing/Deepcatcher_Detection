@@ -138,7 +138,7 @@ def save_prediction(user_id, predicted_class, confidence, image_file, token):
     # Check the status code of the response
     if response.status_code == 201:
         # If the response is successful, display the success message
-        success_message = "Prediction successfully saved in the API."
+        success_message = "Prediction successfully saved in the application."
         st.success(success_message)
     else:
         # If there is an error, display the error message
