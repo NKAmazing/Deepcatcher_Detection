@@ -484,7 +484,7 @@ def tutorial_option():
         )
 
     # Display the video
-    st.video("https://www.youtube.com/watch?v=QW6Vv2W9Z3A")
+    st.video("https://youtu.be/O3HEp2P_MAk")
 
     st.markdown(
         """
