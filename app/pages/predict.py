@@ -20,7 +20,7 @@ st.set_page_config(page_title="Deepcatcher Demo - Prediction", page_icon=":compu
 
 st.sidebar.title("Deepcatcher Demo")
 
-options = st.sidebar.radio("Select an option: ", ["Main Menu"])
+options = st.sidebar.radio("Select an option: ", ["Predict Menu", "Tutorial"])
 
 # Function to preprocess the uploaded image
 def preprocess_image(image, target_size):
@@ -391,25 +391,63 @@ def predict_view():
 
 # ----------------------------------------------------------------------------------------------------------------
 
+def tutorial_option():
+    st.markdown(
+            """
+            ## Deepcatcher Demo - Prediction
+
+            Welcome to the Deepcatcher Demo Prediction page! Here you can upload images and get predictions on whether they are real or fake.
+
+            ### Instructions:
+            1. **Select an Option**: Choose between the **Predict** option to upload images and get predictions, or the **History** option to view your prediction history.
+            2. **Upload Images**: Click on the **Choose images...** button to upload images for prediction.
+            3. **View Predictions**: After uploading images, you will see the prediction results displayed below each image.
+            4. **Save Predictions**: You can save the prediction results by clicking the **Save Prediction** button below each image.
+            5. **View History**: Click on the **History** option to view your saved predictions history.
+
+            ### Note:
+            - **Authentication**: To save predictions, you need to be logged in. Use the **User Authentication** option in the sidebar to sign in or sign up.
+            - **Prediction Limit**: You can save up to 10 predictions. Once you reach the limit, you will not be able to save more predictions.
+
+            ### Interactive Help Video
+            - Watch the video below to learn more about how to use the Deepcatcher Demo Prediction page.
+                
+            """
+        )
+
+    # Display the video
+    st.video("https://www.youtube.com/watch?v=QW6Vv2W9Z3A")
+
+    st.markdown(
+        """
+        ### Get Started:
+        - Choose the **Predict Menu** option to get started with image predictions!
+        """
+    )
+
 # Main Streamlit app
 def main():
     '''
     Main function to run the Streamlit page
     '''
     st.title("Deepcatcher Demo")
-    selected_option = option_menu(
-        menu_title="Main Menu",
-        options=["Predict", "History"],
-        icons=["camera", "clock"],  # optional
-        menu_icon="cast",  # optional
-        default_index=0,
-        orientation="horizontal", # orientation: horizontal (default) or vertical
-    )
-    if selected_option == "Predict":
-        predict_view()
-    elif selected_option == "History":
-        history_view()
-
+    if options == "Predict Menu":
+        selected_option = option_menu(
+            menu_title="Prediction Main Menu",
+            options=["Predict", "History"],
+            icons=["camera", "clock"],  # optional
+            menu_icon="cast",  # optional
+            default_index=0,
+            orientation="horizontal", # orientation: horizontal (default) or vertical
+        )
+        if selected_option == "Predict":
+            predict_view()
+        elif selected_option == "History":
+            history_view()
+    elif options == "Tutorial":
+        tutorial_option()
+    else:
+        st.error("Invalid option selected.")
 
 if __name__ == '__main__':
     main()
